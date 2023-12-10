@@ -1,0 +1,79 @@
+---
+- name: Install and configure Elastic Stack
+  hosts: ubuntu, centos
+  become: yes
+
+  tasks:
+    - name: Update package cache (Ubuntu)
+      apt: update_cache=yes
+      when: "'ubuntu' in inventory_hostname"
+
+    - name: Update package cache (CentOS)
+      yum: name='*' state=latest
+      when: "'centos' in inventory_hostname"
+
+    - name: Install required packages (Ubuntu)
+      apt: name={{ item }} state=present
+      with_items:
+        - openjdk-11-jre
+        - apt-transport-https
+        - software-properties-common
+        - wget
+      when: "'ubuntu' in inventory_hostname"
+
+    - name: Install required packages (CentOS)
+      yum: name={{ item }} state=present
+      with_items:
+        - java-11-openjdk
+        - wget
+      when: "'centos' in inventory_hostname"
+
+    - name: Download and install Elasticsearch (Ubuntu)
+      command: chdir=/tmp creates=/etc/apt/sources.list.d/elastic-7.x.list/ echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" > /etc/apt/sources.list.d/elastic-7.x.list
+      when: "'ubuntu' in inventory_hostname"
+
+    - name: Download and install Elasticsearch (CentOS)
+      command: chdir=/tmp creates=/etc/yum.repos.d/elasticsearch-7.x.repo echo -e "[elasticsearch-7.x]\nname=Elasticsearch repository for 7.x packages\nbaseurl=https://artifacts.elastic.co/packages/7.x/yum" > /etc/yum.repos.d/elasticsearch-7.x.repo
+      when: "'centos' in inventory_hostname"
+
+    - name: Install Elasticsearch (Ubuntu)
+      apt: name=elasticsearch state=present update_cache=no
+      when: "'ubuntu' in inventory_hostname"
+
+    - name: Install Elasticsearch (CentOS)
+      yum: name=elasticsearch state=present
+      when: "'centos' in inventory_hostname"
+
+    - name: Enable and start Elasticsearch service
+      service: name=elasticsearch enabled=yes state=started
+
+    - name: Download and install Kibana (Ubuntu)
+      command: chdir=/tmp creates=/etc/apt/sources.list.d/elastic-7.x.list/ echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" > /etc/apt/sources.list.d/elastic-7.x.list
+      when: "'ubuntu' in inventory_hostname"
+
+    - name: Download and install Kibana (CentOS)
+      command: chdir=/tmp creates=/etc/yum.repos.d/kibana-7.x.repo echo -e "[kibana-7.x]\nname=Kibana repository for 7.x packages\nbaseurl=https://artifacts.elastic.co/packages/7.x/yum" > /etc/yum.repos.d/kibana-7.x.repo
+      when: "'centos' in inventory_hostname"
+
+    - name: Install Kibana (Ubuntu)
+      apt: name=kibana state=present update_cache=no
+      when: "'ubuntu' in inventory_hostname"
+
+    - name: Install Kibana (CentOS)
+      yum: name=kibana state=present
+      when: "'centos' in inventory_hostname"
+
+    - name: Enable and start Kibana service
+      service: name=kibana enabled=yes state=started
+
+    - name: Download and install Logstash (Ubuntu)
+      apt: deb=https://artifacts.elastic.co/downloads/logstash/logstash-7.9.2.deb state=present
+      when: "'ubuntu' in inventory_hostname"
+
+    - name: Download and install Logstash (CentOS)
+      yum: name=https://artifacts.elastic.co/downloads/logstash/logstash-7.9.2.rpm state=present
+      when: "'centos' in inventory_hostname"
+
+    - name: Enable and start Logstash service
+      service: name=logstash enabled=yes state=started
+

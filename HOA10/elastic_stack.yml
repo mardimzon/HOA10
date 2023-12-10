@@ -1,0 +1,29 @@
+---
+- hosts: all
+  become: true
+  pre_tasks:
+
+   -  name: install updates (CentOS)
+      yum:
+        name: '*'
+        state: latest
+        update_only: yes
+        
+      when: ansible_distribution == "CentOS"
+
+   -   name: install updates (Ubuntu)
+       apt:
+         upgrade: dist
+         update_cache: yes
+       when: ansible_distribution == "Ubuntu"
+
+- hosts: ubuntuelk
+  become: true
+  roles:
+    - ubuntuelk
+
+- hosts: centoselk
+  become: true
+  roles:
+    - centoselk
+
